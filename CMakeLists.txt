@@ -7,12 +7,15 @@ option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DOCS "Build documentation" OFF)
 option(BUILD_COVERAGE "Build code coverage" OFF)
 
+set(TESTING_CONFIG_OPT FILEPATH ${CMAKE_CURRENT_LIST_DIR}/config.cmake)
+
 set(
   HUNTER_CACHE_SERVERS
   "https://github.com/bmstu-iu8-cpp-sem-3/hunter-cache"
   CACHE STRING "Default cache server"
 )
 
+set(HUNTER_STATUS_DEBUG ON)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
@@ -20,16 +23,32 @@ HunterGate(
   SHA1 "35fa55bc1dfcf9f4d7264f8bb26cd1759ce1ae07"
 )
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/third-party/grpc)
+
 project(lab-07-grpc-servic VERSION 0.1.0)
 string(APPEND CMAKE_CXX_FLAGS " -pedantic -Werror -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS " -Wno-unused-command-line-argument -Wno-unused-parameter")
 string(APPEND CMAKE_CXX_FLAGS " -Wshadow -Wnon-virtual-dtor")
 
+
 hunter_add_package(GTest)
 find_package(GTest CONFIG REQUIRED)
 
-hunter_add_package(gRPC)
-find_package(gRPC CONFIG REQUIRED)
+#find_package(PkgConfig REQUIRED)
+#pkg_search_module(GRPC REQUIRED grpc)
+#pkg_search_module(GRPCPP REQUIRED grpc++)
+
+#hunter_add_package(gRPC)
+#find_package(gRPC CONFIG REQUIRED)
+
+#include(FetchContent)
+#FetchContent_Declare(
+#        gRPC
+#        GIT_REPOSITORY https://github.com/grpc/grpc
+#        GIT_TAG        v1.28.0
+#)
+#set(FETCHCONTENT_QUIET OFF)
+#FetchContent_MakeAvailable(gRPC)
 
 hunter_add_package(Protobuf)
 find_package(Protobuf CONFIG REQUIRED)
@@ -86,12 +105,12 @@ add_custom_command(
       DEPENDS ${PROTO_FILES})
 
 add_executable(grpc_service
-  ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp
-  ${PROTO_GENERATED_SOURCES}
-  ${PROTO_GENERATED_GRPC_SOURCES})
+        ${CMAKE_CURRENT_SOURCE_DIR}/sources/main.cpp
+        ${PROTO_GENERATED_SOURCES}
+        ${PROTO_GENERATED_GRPC_SOURCES})
 
 target_include_directories(grpc_service PRIVATE "${API_GENERATED_DIR}")
 
 target_link_libraries(grpc_service
-  gRPC::grpc++ gRPC::grpc++_reflection
-  protobuf::libprotobuf)
+        gRPC::grpc++ gRPC::grpc++_reflection
+        protobuf::libprotobuf)
